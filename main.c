@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------
- * Testprogram:  Port M LED on/off
- * 	             Print "MP-Labor" on console
- *                                                                        Prosch 3/2017
+ * FahrzeugInfoDisplay: 
+ 	Read speed and direction from rotary encoder and print to LCD
+ *                                                                     Agrebi, Stetter 2017
  *---------------------------------------------------------------------------------------
 */
 
