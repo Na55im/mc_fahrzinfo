@@ -1,0 +1,37 @@
+/*---------------------------------------------------------------------------------------
+ * TivaWare Testprogram:  Port M Bit 0 LED on/off
+ * 	         	          Print "MP-Labor" to STDIO
+ *                                                                          Prosch 6/2016
+ *---------------------------------------------------------------------------------------
+*/
+
+#include "mpp1.h"
+#include <stdio.h>
+
+void wait(void){
+	volatile int tmp;
+	for(tmp=0;tmp<800000;tmp++);
+}
+//#############################################################################
+int main(void)
+{	 SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
+       			SYSCTL_XTAL_16MHZ);
+
+	 //Port  Clock Gating Control
+	 SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
+
+	 //Set direction
+	   GPIOPinTypeGPIOOutput(GPIO_PORTM_BASE,GPIO_PIN_0);
+
+	 //Ports on/off
+	 while(1){
+		 GPIOPinWrite(GPIO_PORTM_BASE,GPIO_PIN_0,0x01);
+		 wait();
+		 GPIOPinWrite(GPIO_PORTM_BASE,GPIO_PIN_0,0x00);
+		 wait();
+
+		 printf("MP-Labor\n");
+
+	 }
+}
+
