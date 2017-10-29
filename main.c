@@ -8,6 +8,7 @@
 #include "tm4c1294ncpdt.h"
 #include "stdio.h"
 #include "mpp1.h"
+#include "window.h"
 
 
 //MACROS
@@ -16,9 +17,6 @@
 #define PIN_RS 0x04
 #define PIN_CS 0x08
 #define PIN_RST 0x10
-
-
-
 
 
 /*void wait(unsigned int time){
@@ -54,7 +52,7 @@ void initialise_setup(void)
 
 }
 
-void write_command(unsigned char command)
+void write_command()
 {
 	GPIO_PORTL_DATA_R = 0x1F; //initial state
 	/*GPIO_PORTL_DATA_R &= ~(PIN_CS); //CS=0
@@ -62,7 +60,7 @@ void write_command(unsigned char command)
 	GPIO_PORTL_DATA_R &= ~(PIN_WR); //WR=0
 	*/
 	GPIO_PORTL_DATA_R = 0x11;
-	GPIO_PORTM_DATA_R = command; //write command
+	GPIO_PORTM_DATA_R = g_window.command; //write command
 	/*GPIO_PORTL_DATA_R |= PIN_WR; //WR=1
 	GPIO_PORTL_DATA_R |= PIN_CS; //CS=1
 	*/
@@ -70,35 +68,45 @@ void write_command(unsigned char command)
 }
 
 
-void write_data (unsigned char data)
+void write_data()
 {
 	GPIO_PORTL_DATA_R = 0x1F; //initial state
 	/*GPIO_PORTL_DATA_R &= ~(PIN_CS); //CS=0
 	GPIO_PORTL_DATA_R |= (PIN_RS); //RS=1
 	GPIO_PORTL_DATA_R &= ~(PIN_WR); //WR=0*/
 	GPIO_PORTL_DATA_R = 0x15;
-	GPIO_PORTM_DATA_R = data; //write command
+	GPIO_PORTM_DATA_R = g_window.data; //write data
 	/*GPIO_PORTL_DATA_R |= PIN_WR; //WR=1
 	GPIO_PORTL_DATA_R |= PIN_CS; //CS=1*/
 	GPIO_PORTL_DATA_R = 0x1B;
 
 }
 
-void window_set(unsigned int start_x, unsigned int end_x, unsigned int start_y, unsigned int end_y)
+void window_set()
 {
 	//X
-	write_command(0x2A); //set page address
-	write_data(start_x>>8); //set start page address HB
-	write_data(start_x); //set start page address LB
-	write_data(end_x>>8); //set end page address HB
-	write_data(end_x); //set end page address LB
+	g_window.command = 0x2A;
+	write_command(); //set page address
+	g_window.data = g_window.start_x >> 8;
+	write_data(); //set start page address HB
+	g_window.data = g_window.start_x;
+	write_data(); //set start page address LB
+	g_window.data = g_window.end_x >> 8;
+	write_data(); //set end page address HB
+	g_window.data = g_window.end_x;
+	write_data(); //set end page address LB
 
 	//Y
-	write_command(0x2B); //set column address
-	write_data(start_y>>8); //set start column address HB
-	write_data(start_y); //set start column address LB
-	write_data(end_y>>8); //set end column address HB
-	write_data(end_y); //set end column address LB
+	g_window.command = 0x2B;
+	write_command(); //set column address
+	g_window.data = g_window.start_y>>8;
+	write_data(); //set start column address HB
+	g_window.data = g_window.start_y;
+	write_data(); //set start column address LB
+	g_window.data = g_window.end_y>>8;
+	write_data(); //set end column address HB
+	g_window.data = g_window.end_y;
+	write_data(); //set end column address LB
 }
 
 
@@ -108,79 +116,133 @@ void initialise_ssd1963(void)
 	GPIO_PORTL_DATA_R = 0x00; //RST=0
 	wait(100); //wait > 100u
 	////
-	write_command(0x01); //software reset
+	g_window.command = 0x01;
+	write_command(); //software reset
 	wait(5000); //wait >5m
 	//
-	write_command(0xE2); //sett PLL f=100Mhz
-	write_data(0x1D);
-	write_data(0x02);
-	write_data(0x04);
+	g_window.command = 0xE2;
+	write_command(); //sett PLL f=100Mhz
+	g_window.data = 0x1D;
+	write_data();
+	g_window.data = 0x02;
+	write_data();
+	g_window.data = 0x04;
+	write_data();
 	////
-	write_command(0xE0); //start PLL
-	write_data(0x01);
+	g_window.command = 0xE0;
+	write_command(); //start PLL
+	g_window.data =0x01 ;
+	write_data();
 	wait(100); //wait > 100u
 	//////
-	write_command(0xE0); //lock PLL
-	write_data(0x03);
+	g_window.command = 0xE0;
+	write_command(); //lock PLL
+	g_window.data = 0x03 ;
+	write_data();
 	wait(100); //wait > 100us
 	//////
-	write_command(0x01); //software reset
+	g_window.command = 0x01;
+	write_command(); //software reset
 	wait(5000); //wait >5m
 	////
-	write_command(0xE6); //set LCD pixel CLK = 9 MHz
-	write_data(0x01);
-	write_data(0x70);
-	write_data(0xA3);
-	write_command(0xB0); //set LCD panel mode
-	write_data(0x20); //TFT panel 24bit
-	write_data(0x00); //TFT mode
-	write_data(0x01); //horizontal size 480-1 HB
-	write_data(0xDF); //horizontal size 480-1 LB
-	write_data(0x01); //vertical size 272-1 HB
-	write_data(0x0F); //vertical size 272-1 LB
-	write_data(0x00); //even/odd line RGB
+	g_window.command = 0xE6;
+	write_command(); //set LCD pixel CLK = 9 MHz
+	g_window.data = 0x01;
+	write_data();
+	g_window.data = 0x70;
+	write_data();
+	g_window.data =0xA3 ;
+	write_data();
+	g_window.command = 0xB0;
+	write_command(); //set LCD panel mode
+	g_window.data = 0x20;
+	write_data(); //TFT panel 24bit
+	g_window.data = 0x00;
+	write_data(); //TFT mode
+	g_window.data = 0x01;
+	write_data(); //horizontal size 480-1 HB
+	g_window.data = 0xDF;
+	write_data(); //horizontal size 480-1 LB
+	g_window.data = 0x01 ;
+	write_data(); //vertical size 272-1 HB
+	g_window.data = 0x0F ;
+	write_data(); //vertical size 272-1 LB
+	g_window.data = 0x00 ;
+	write_data(); //even/odd line RGB
 	///////////
-	write_command(0xB4); //set horizontal period
-	write_data(0x02); //set HT total pxel = 531 HB
-	write_data(0x13); //LB
-	write_data(0x00); //set horiz sync start = 43 HB
-	write_data(0x2B); //LB
-	write_data(0x0A); //set horiz sync = 10
-	write_data(0x00); //set horiz sync start pos = 8 HB
-	write_data(0x08); //LB
-	write_data(0x00);
+	g_window.command = 0xB4;
+	write_command(); //set horizontal period
+	g_window.data =0x02 ;
+	write_data(); //set HT total pxel = 531 HB
+	g_window.data = 0x13;
+	write_data(); //LB
+	g_window.data = 0x00;
+	write_data(); //set horiz sync start = 43 HB
+	g_window.data =0x2B ;
+	write_data(); //LB
+	g_window.data = 0x0A;
+	write_data(); //set horiz sync = 10
+	g_window.data = 0x00;
+	write_data(); //set horiz sync start pos = 8 HB
+	g_window.data = 0x08;
+	write_data(); //LB
+	g_window.data = 0x00;
+	write_data();
 	///////
-	write_command(0xB6); //set vertical period
-	write_data(0x01); //set VT lines = 288 HB
-	write_data(0x20); //LB
-	write_data(0x00); //set VPS = 12 HB
-	write_data(0x0C); //LB
-	write_data(0x0A); //vertical sync pulse = 10
-	write_data(0x00); //vert sync pulse start = 4 HB
-	write_data(0x04); //LB
+	g_window.command = 0xB6;
+	write_command(); //set vertical period
+	g_window.data = 0x01;
+	write_data(); //set VT lines = 288 HB
+	g_window.data = 0x20;
+	write_data(); //LB
+	g_window.data = 0x00;
+	write_data(); //set VPS = 12 HB
+	g_window.data = 0x0C;
+	write_data(); //LB
+	g_window.data = 0x0A;
+	write_data(); //vertical sync pulse = 10
+	g_window.data = 0x00 ;
+	write_data(); //vert sync pulse start = 4 HB
+	g_window.data = 0x04;
+	write_data(); //LB
 	//////////
-	write_command(0x36); //flip display
-	write_data(0x03);
+	g_window.command = 0x36;
+	write_command(); //flip display
+	g_window.data = 0x03;
+	write_data();
 	//////////
-	write_command(0xF0); //pixel data format = 8bit
-	write_data(0x00);
+	g_window.command = 0xF0;
+	write_command(); //pixel data format = 8bit
+	g_window.data = 0x00 ;
+	write_data();
 	//////////
-	write_command(0x29); //display on
+	g_window.command = 0x29;
+	write_command(); //display on
 
 }
 
 
-void clear_screen(unsigned char r, unsigned char g, unsigned char b)
+void clear_screen()
 {
 	int x, y;
-	window_set(0,480,0,827);
+	g_window.start_x = 0;
+	g_window.end_x = 480;
+    g_window.start_x = 0;
+	g_window.end_x = 827;
+    window_set();
+
+    g_window.command = 0x2C;
 	write_command(0x2C);
 	for(y = 0; y<= 272; y++)
 		for(x=0; x<=480; x++){
-			write_command(0x2C);
-			write_data(r);
-			write_data(g);
-			write_data(b);
+			g_window.command = g_window.command;
+			write_command();
+			g_window.data = g_window.red;
+			write_data();
+			g_window.data = g_window.green;
+			write_data();
+			g_window.data = g_window.blue;
+			write_data();
 		}
 
 }
@@ -190,8 +252,11 @@ int main(void)
 	initialise_setup();
 	initialise_ssd1963();
 
-
-	clear_screen(0x00, 0x44, 0x55);
+	g_window.red = 0x00;
+	g_window.green = 0x44;
+	g_window.blue = 0x55;
+	g_window.command = 0x2C;
+	clear_screen();
 
 
 	while(1);
