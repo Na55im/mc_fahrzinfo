@@ -33,7 +33,6 @@ void wait(int clicks){
 	for(tmp=0;tmp<clicks;tmp++);
 }
 
-
 void initialise_setup(void)
 {
 	//SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
@@ -66,7 +65,6 @@ void write_command()
 	*/
 	GPIO_PORTL_DATA_R = 0x1B;
 }
-
 
 void write_data()
 {
@@ -108,7 +106,6 @@ void window_set()
 	g_window.data = g_window.end_y;
 	write_data(); //set end column address LB
 }
-
 
 void initialise_ssd1963(void)
 {
@@ -221,7 +218,6 @@ void initialise_ssd1963(void)
 
 }
 
-
 void clear_screen()
 {
 	int x, y;
@@ -232,9 +228,9 @@ void clear_screen()
     window_set();
 
     g_window.command = 0x2C;
-	write_command(0x2C);
-	for(y = 0; y<= 272; y++)
-		for(x=0; x<=480; x++){
+	write_command();
+	for(y = 0; y<= g_window.HEIGHT; y++)
+		for(x=0; x<= g_window.WIDTH; x++){
 			g_window.command = g_window.command;
 			write_command();
 			g_window.data = g_window.red;
